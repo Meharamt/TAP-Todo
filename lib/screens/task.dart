@@ -15,11 +15,24 @@ class _TaskScreenState extends State<TaskScreen> {
   late int hours;
   late int minutes;
   late bool timeperiod;
+  TextEditingController titleController = TextEditingController();
+  void updateTitle(String value) async {
+    await widget.taskRef.update({'title': value});
+  }
+
   @override
   void initState() {
+    _titleNode.requestFocus();
+    _titleNode.addListener(() {
+      if (!_titleNode.hasFocus) {
+        updateTitle(titleController.text);
+      }
+    });
+
     super.initState();
   }
 
+  FocusNode _titleNode = FocusNode();
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<DocumentSnapshot>(
@@ -35,8 +48,9 @@ class _TaskScreenState extends State<TaskScreen> {
           );
         } else {
           final taskSnapshot = snapshot.data;
-          TextEditingController titleController =
-              TextEditingController(text: taskSnapshot!['title']);
+
+          titleController.text = taskSnapshot!['title'];
+
           TextEditingController itemController = TextEditingController();
           return Scaffold(
             appBar: AppBar(
@@ -74,6 +88,7 @@ class _TaskScreenState extends State<TaskScreen> {
                   alignment: Alignment.center,
                   margin: const EdgeInsets.all(10),
                   child: TextField(
+                    focusNode: _titleNode,
                     controller: titleController,
                     textCapitalization: TextCapitalization.sentences,
                     style: const TextStyle(
@@ -85,7 +100,7 @@ class _TaskScreenState extends State<TaskScreen> {
                         hintStyle: TextStyle()),
                     onSubmitted: (value) {
                       if (value.isNotEmpty) {
-                        widget.taskRef.update({'title': value});
+                        updateTitle(value);
                         titleController.text = value;
                       } else {
                         titleController.text = taskSnapshot['title'];
